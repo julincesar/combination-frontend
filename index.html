@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Combination Finder</title>
+  <style>
+    body { font-family: Arial, sans-serif; text-align: center; }
+    .grid { display: grid; grid-template-columns: repeat(3, 50px); gap: 5px; margin: 10px auto; width: 170px; }
+    .digit { width: 50px; height: 50px; font-size: 20px; cursor: pointer; background: lightgray; border: 1px solid black; }
+    .include { background: lightgreen !important; }
+    .exclude { background: lightcoral !important; }
+    .buttons { margin: 10px; }
+    .output { margin-top: 15px; font-size: 18px; }
+  </style>
+</head>
+<body>
+  <h2>Combination Finder</h2>
+  <div class="buttons">
+    <button onclick="setMode('include')" style="background: lightgreen;">Include</button>
+    <button onclick="setMode('exclude')" style="background: lightcoral;">Exclude</button>
+  </div>
+  <div class="grid">
+    <button class="digit" onclick="toggleDigit(this)">1</button>
+    <button class="digit" onclick="toggleDigit(this)">2</button>
+    <button class="digit" onclick="toggleDigit(this)">3</button>
+    <button class="digit" onclick="toggleDigit(this)">4</button>
+    <button class="digit" onclick="toggleDigit(this)">5</button>
+    <button class="digit" onclick="toggleDigit(this)">6</button>
+    <button class="digit" onclick="toggleDigit(this)">7</button>
+    <button class="digit" onclick="toggleDigit(this)">8</button>
+    <button class="digit" onclick="toggleDigit(this)">9</button>
+  </div>
+  <button onclick="clearSelections()">CLEAR</button>
+  <div>
+    Sum: <input type="number" id="sumValue" value="22" style="width: 50px;">
+    Length: <input type="number" id="lengthValue" value="4" style="width: 50px;">
+  </div>
+  <button onclick="sendRequest()">GO</button>
+  <div class="output" id="results"></div>
+
+  <script>
+    let mode = "include"; 
+    let includeDigits = [];
+    let excludeDigits = [];
+
+    function setMode(newMode) {
+      mode = newMode;
+    }
+
+    function toggleDigit(btn) {
+      let num = parseInt(btn.innerText);
+      if (mode === "include") {
+        if (includeDigits.includes(num)) {
+          includeDigits = includeDigits.filter(n => n !== num);
+          btn.classList.remove("include");
+        } else {
+          includeDigits.push(num);
+          btn.classList.add("include");
+          btn.classList.remove("exclude");
+          excludeDigits = excludeDigits.filter(n => n !== num);
+        }
+      } else if (mode === "exclude") {
+        if (excludeDigits.includes(num)) {
+          excludeDigits = excludeDigits.filter(n => n !== num);
+          btn.classList.remove("exclude");
+        } else {
+          excludeDigits.push(num);
+          btn.classList.add("exclude");
+          btn.classList.remove("include");
+          includeDigits = includeDigits.filter(n => n !== num);
+        }
+      }
+    }
+
+    function clearSelections() {
+      includeDigits = [];
+      excludeDigits = [];
+      document.querySelectorAll(".digit").forEach(btn => {
+        btn.classList.remove("include", "exclude");
+      });
+    }
+
+    async function sendRequest() {
+      let sum = parseInt(document.getElementById("sumValue").value);
+      let length = parseInt(document.getElementById("lengthValue").value);
+
+      let response = await fetch("https://combination-finder-lx8z.onrender.com/findCombinations", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ sumValue: sum, length: length, includeDigits, excludeDigits })
+      });
+
+      let results = await response.json();
+      document.getElementById("results").innerHTML = results.map(arr => arr.join("")).join("<br>");
+    }
+  </script>
+</body>
+</html>
